@@ -1,0 +1,5 @@
+completions/skc_completion.bash
+subcommands/*
+!subcommands/*.example
+config/*
+!config/.gitkeep

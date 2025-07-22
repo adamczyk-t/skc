@@ -1,0 +1,11 @@
+#!/bin/bash
+
+if [[ "$1" == "" || "$1" == "_usage_" ]]; then
+    echo "Description: executes given command inside one of the application pods"
+    echo "Arguments: command"
+    echo "Example 1: skc (..) exec bash"
+    echo "Example 2: skc (..) exec echo text"
+    exit 0
+fi
+
+kubectl exec -it `kubectl get pods -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}' -l '<label-of-app-pod=label-of-app-pod>' | head -n1` -- $@

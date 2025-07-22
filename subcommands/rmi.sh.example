@@ -1,0 +1,48 @@
+#!/bin/bash
+
+if [[ "$1" == "_usage_" ]]; then
+    echo "Description: runs jconsole with port-forwading to one of the application pods or specific application pod"
+    echo "Arguments: [optional_index_or_name_of_pod]"
+    echo "Example 1 (runs jconsole for first app pod): skc (..) rmi"
+    echo "Example 2 (runs jconsole for second app pod): skc (..) rmi 2"
+    echo "Example 3 (runs jconsole for pod named my-app-234532-ciawu): skc (..) rmi my-app-234532-ciawu"
+    exit 0
+fi
+
+RMI_PORT=12345
+
+number_regex='^[0-9]+$'
+if [[ $1 == "" ]]; then
+    POD=`kubectl get pods -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}' -l '<label-of-app-pod=label-of-app-pod>' | head -n1`
+elif [[ $1 =~ $number_regex ]]; then
+    POD=`kubectl get pods -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}' -l '<label-of-app-pod=label-of-app-pod>' | sed -n "${1}p"`
+    if [[ $POD == "" ]]; then
+        echo "Could not find requested pod..."
+        exit 1
+    fi
+else
+    POD=`kubectl get pods -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}' -l '<label-of-app-pod=label-of-app-pod>' | grep "$1"`
+    if [[ $POD == "" ]]; then
+        echo "Could not find requested pod..."
+        exit 1
+    fi
+fi
+
+echo "Using pod $POD..."
+
+kubectl port-forward $POD $RMI_PORT & pid=$!
+trap "kill $pid" EXIT
+
+# Wait for port-forward
+for((i=0; i<10; i++)); do 
+    sleep 0.5s
+    if netstat -an | grep -q ':$RMI_PORT '; then
+        break
+    fi
+done
+
+if netstat -an | grep -q ':$RMI_PORT '; then
+    jconsole 'localhost:$RMI_PORT'
+else
+    echo "Port forward failed..."
+fi

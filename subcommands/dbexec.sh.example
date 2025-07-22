@@ -1,0 +1,11 @@
+#!/bin/bash
+
+if [[ "$1" == "" || "$1" == "_usage_" ]]; then
+    echo "Description: executes given command inside database master pod"
+    echo "Arguments: command"
+    echo "Example 1: skc (..) execdb bash"
+    echo "Example 2: skc (..) execdb echo text"
+    exit 0
+fi
+
+kubectl exec -it `kubectl get pods -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}' -l '<label-of-master-db-pod=label-of-master-pod>' | head -n1` -- $@

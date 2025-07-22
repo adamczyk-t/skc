@@ -1,0 +1,18 @@
+#!/bin/bash
+
+if [[ "$1" == "_usage_" ]]; then
+    echo "Description: shows credentials for the database"
+    echo "Example 1: skc (..) dbcreds"
+    exit 0
+fi
+
+SECRET=`kubectl get secrets --no-headers -o custom-columns=":metadata.name" | grep "<secret name>" | grep <part of username>`
+if [[ `echo $SECRET | wc -l` != "1" ]]; then
+    echo "Something went wrong. Multiple matching secrets. Exiting..."
+    exit 1
+fi
+
+echo
+echo "Database: `echo $SECRET | sed 's/<part of username>.*//'`"
+echo "Username: `kubectl get secret $SECRET -o jsonpath='{<path to db username>}' | base64 -d`"
+echo "Password: `kubectl get secret $SECRET -o jsonpath='{<path to db password>}' | base64 -d`"

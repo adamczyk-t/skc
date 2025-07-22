@@ -1,0 +1,32 @@
+#!/bin/bash
+
+if [[ "$1" == "_usage_" ]]; then
+    echo "Description: run kubectl log for one of application pods or specific application pod"
+    echo "Arguments: [index_or_name_of_pod_or_underscore] [...kubectl log flags]"
+    echo "Example 1 (shows logs for first app pod): skc (..) logs"
+    echo "Example 2 (shows logs and follows them for the first app pod): skc (..) logs _ -f"
+    echo "Example 3 (shows logs and follows them for the second app pod): skc (..) logs 2 -f"
+    echo "Example 4 (shows logs for the pod named my-app-234532-ciawu): skc (..) logs my-app-234532-ciawu"
+    exit 0
+fi
+
+number_regex='^[0-9]+$'
+if [[ $1 == "" || "$1" == "_" || "$1" == "-" || "$1" == "--" ]]; then
+    POD=`kubectl get pods -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}' -l '<label-of-app-pod=label-of-app-pod>' | head -n1`
+elif [[ $1 =~ $number_regex ]]; then
+    POD=`kubectl get pods -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}' -l '<label-of-app-pod=label-of-app-pod>' | sed -n "${1}p"`
+    if [[ $POD == "" ]]; then
+        echo "Could not find requested pod..."
+        exit 1
+    fi
+else
+    POD=`kubectl get pods -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}' -l '<label-of-app-pod=label-of-app-pod>' | grep "$1"`
+    if [[ $POD == "" ]]; then
+        echo "Could not find requested pod..."
+        exit 1
+    fi
+fi
+
+echo "Using pod $POD..."
+
+kubectl logs $POD ${@:2}

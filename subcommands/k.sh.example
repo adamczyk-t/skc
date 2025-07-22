@@ -1,0 +1,10 @@
+#!/bin/bash
+
+if [[ "$1" == "_usage_" ]]; then
+    echo "Description: runs kubectl with given arguments"
+    echo "Arguments: [...kubectl arguments]"
+    echo "Example 1: skc (..) k get po"
+    exit 0
+fi
+
+kubectl $@

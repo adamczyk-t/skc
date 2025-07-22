@@ -1,0 +1,28 @@
+#!/bin/bash
+
+if [[ "$1" == "_usage_" ]]; then
+    echo "Description: runs watch on kubectl get pods or different resources"
+    echo "Arguments: [optional_argument_for_kubectl_get]"
+    echo "Example 1 (runs watch kubectl get pods): skc (..) watch"
+    echo "Example 2: skc (..) watch po,secret"
+    exit 0
+fi
+
+function my_watch {
+  ARGS="${@}"
+  clear;
+  while(true); do
+    OUTPUT=`$ARGS`
+    clear
+    echo -e "Every 1.0s: $ARGS"
+    echo ""
+    echo -e "${OUTPUT[@]}"
+    sleep 1
+  done
+}
+
+if [[ "`uname`" == "Linux" ]]; then
+    watch kubectl get ${1:-pods}
+else
+    my_watch kubectl get ${1:-pods}
+fi

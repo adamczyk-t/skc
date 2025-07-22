@@ -1,0 +1,31 @@
+#!/bin/bash
+
+if [[ "$1" == "_usage_" ]]; then
+    echo "Description: run kubectl port-forward for one of the application pods or specific application pod"
+    echo "Arguments: port [index_or_name_of_pod_or_underscore]"
+    echo "Example 1 (use port-forward command to first app pod): skc (..) forward 6000"
+    echo "Example 2 (use port-forward command to second app pod): skc (..) forward 6000 2"
+    echo "Example 3 (use port-forward command to pod named my-app-234532-ciawu): skc (..) forward 6000 my-app-234532-ciawu"
+    exit 0
+fi
+
+number_regex='^[0-9]+$'
+if [[ $2 == "" ]]; then
+    POD=`kubectl get pods -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}' -l '<label-of-app-pod=label-of-app-pod>' | head -n1`
+elif [[ $2 =~ $number_regex ]]; then
+    POD=`kubectl get pods -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}' -l '<label-of-app-pod=label-of-app-pod>' | sed -n "${2}p"`
+    if [[ $POD == "" ]]; then
+        echo "Could not find requested pod..."
+        exit 1
+    fi
+else
+    POD=`kubectl get pods -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}' -l '<label-of-app-pod=label-of-app-pod>' | grep "$2"`
+    if [[ $POD == "" ]]; then
+        echo "Could not find requested pod..."
+        exit 1
+    fi
+fi
+
+echo "Using pod $POD..."
+
+kubectl port-forward $POD $1

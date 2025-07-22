@@ -1,0 +1,11 @@
+#!/bin/bash
+
+if [[ "$1" == "_usage_" ]]; then
+    echo "Description: forwards local port (default 5432) to database master pod"
+    echo "Arguments: [optional_port_arg_for_portforward]"
+    echo "Example 1: skc (..) dbforward 6000:5432"
+    echo "Example 2: skc (..) dbforward"
+    exit 0
+fi
+
+kubectl port-forward `kubectl get pods -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}' -l "<label-of-master-db-pod=label-of-master-pod>" | head -n1` ${1:-5432}

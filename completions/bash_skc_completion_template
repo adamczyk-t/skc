@@ -1,0 +1,26 @@
+#!/bin/bash
+
+_skc_completion() {
+    local cur opts base_dir alias_file
+
+    cur="${COMP_WORDS[COMP_CWORD]}"
+    prev="${COMP_WORDS[COMP_CWORD-1]}"
+
+    if [[ $COMP_CWORD -eq 1 ]]; then
+        opts=$(find "<skc_dir>/config" -maxdepth 1 -type f -name "*.yaml" ! -name "current*" | sed 's|.*/||;s|\.yaml$||')
+    elif [[ $COMP_CWORD -eq 2 ]]; then
+        if [[ "$prev" == "-" || "$prev" == "--" ]]; then
+            opts=$(find "<skc_dir>/subcommands" -type f -executable ! -iname "*.example" | xargs -I{} basename {} | cut -d'.' -f1)
+        else
+            opts=$(awk -F, '{print $1}' "<skc_dir>/config/namespaces")
+        fi
+    elif [[ $COMP_CWORD -eq 3 ]]; then
+        opts=$(find "<skc_dir>/subcommands" -type f -executable ! -iname "*.example" | xargs -I{} basename {} | cut -d'.' -f1)
+    else
+        opts=""
+    fi
+
+    COMPREPLY=($(compgen -W "$opts" -- "$cur"))
+}
+
+complete -F _skc_completion skc
